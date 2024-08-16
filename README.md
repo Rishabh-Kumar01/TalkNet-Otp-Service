@@ -37,8 +37,8 @@ The OTP (One-Time Password) Service is a microservice designed to handle the gen
    Create a `.env` file in the root directory and add the following:
    ```
    PORT=3000
-   MONGODB_URI=mongodb://localhost:27017/otp_service
-   KAFKA_BROKERS=localhost:9092
+   DATABASE_URL=mongodb://localhost:27017/otp_service
+   JWT_SECRET=your_jwt_secret
    EMAIL_SERVICE=gmail
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASS=your-email-password
