@@ -87,6 +87,35 @@ class OTPService {
     }
   }
 
+  async verifyRecipient(otpId, recipient) {
+    try {
+      const otpRecord = await OTP.findById(otpId);
+      if (!otpRecord) {
+        return {
+          success: false,
+          data: null,
+          error: new ServiceError("OTP not found"),
+        };
+      }
+
+      if (otpRecord.recipient !== recipient) {
+        return {
+          success: false,
+          data: null,
+          error: new ServiceError("Recipient mismatch"),
+        };
+      }
+
+      return { success: true, data: otpRecord, error: null };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error: new ServiceError("Failed to verify recipient"),
+      };
+    }
+  }
+
   async verifyOTP(otpId, userOTP) {
     try {
       const otpRecord = await OTP.findById(otpId);

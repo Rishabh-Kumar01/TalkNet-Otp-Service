@@ -37,6 +37,7 @@ class OTPController {
         error: {},
       });
     } catch (error) {
+      console.log(error);
       res.status(error.statusCode || 500).json({
         status: "Failure",
         message: error.message,
@@ -52,6 +53,15 @@ class OTPController {
       const { otpId, recipient } =
         otpService.decodeVerificationKey(verificationKey);
 
+      const recipientVerification = await otpService.verifyRecipient(
+        otpId,
+        recipient
+      );
+      if (!recipientVerification.success) {
+        throw recipientVerification.error;
+      }
+
+      // If recipient is verified, proceed to verify the OTP
       const { success, data, error } = await otpService.verifyOTP(otpId, otp);
 
       if (!success) {
