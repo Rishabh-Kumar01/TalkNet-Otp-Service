@@ -3,4 +3,5 @@ module.exports = {
   errorHandler: require("./errors/index.error"),
   otpCleanup: require("./otpCleanup"),
   crypto: require("./crypto"),
+  kafka: require("./kafka"),
 };
