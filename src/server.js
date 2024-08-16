@@ -68,6 +68,7 @@ const setupAndStartServer = async () => {
       );
     }
   });
+  console.log("Kafka consumer started");
 
   // Start the server and connect to the database
   app.listen(config.serverConfig.PORT, async () => {
