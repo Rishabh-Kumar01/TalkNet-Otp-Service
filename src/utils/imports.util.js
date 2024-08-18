@@ -6,6 +6,7 @@ module.exports = {
   dotenv: require("dotenv"),
   express: require("express"),
   helmet: require("helmet"),
+  jwt: require("jsonwebtoken"),
   mongoose: require("mongoose"),
   morgan: require("morgan"),
   nodemailer: require("nodemailer"),

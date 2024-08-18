@@ -50,19 +50,22 @@ class OTPController {
   async verifyOTP(req, res) {
     try {
       const { otp, verificationKey } = req.body;
-      const { otpId, recipient } =
-        otpService.decodeVerificationKey(verificationKey);
 
       const recipientVerification = await otpService.verifyRecipient(
-        otpId,
-        recipient
+        verificationKey
       );
       if (!recipientVerification.success) {
         throw recipientVerification.error;
       }
 
+      const user = recipientVerification.user;
+
       // If recipient is verified, proceed to verify the OTP
-      const { success, data, error } = await otpService.verifyOTP(otpId, otp);
+      const { success, data, error } = await otpService.verifyOTP(
+        recipientVerification.data._id,
+        user,
+        otp
+      );
 
       if (!success) {
         throw error;
@@ -75,6 +78,7 @@ class OTPController {
         error: {},
       });
     } catch (error) {
+      console.log(error, "Controller error");
       res.status(error.statusCode || 400).json({
         status: "Failure",
         message: error.message,

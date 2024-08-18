@@ -42,6 +42,7 @@ const setupAndStartServer = async () => {
   utils.otpCleanup();
 
   await utils.kafka.connectConsumer();
+  await utils.kafka.connectProducer();
   await utils.kafka.startConsumer(async (message) => {
     if (message.type === "SEND_OTP") {
       const { userId, email, action } = message.data;
@@ -64,7 +65,7 @@ const setupAndStartServer = async () => {
       }
 
       console.log(
-        `OTP sent successfully for user ${userId} with action ${action}`
+        `OTP sent successfully for user ${userId} with ${email} along with action ${action}`
       );
     }
   });

@@ -6,6 +6,7 @@ const kafka = new Kafka({
 });
 
 const consumer = kafka.consumer({ groupId: "otp-service-group" });
+const producer = kafka.producer();
 
 const connectConsumer = async () => {
   await consumer.connect();
@@ -22,7 +23,31 @@ const startConsumer = async (messageHandler) => {
   });
 };
 
+const connectProducer = async () => {
+  await producer.connect();
+  console.log("Kafka producer connected");
+};
+
+const disconnectProducer = async () => {
+  await producer.disconnect();
+};
+
+const sendMessage = async (topic, message) => {
+  try {
+    await producer.send({
+      topic,
+      messages: [{ value: JSON.stringify(message) }],
+    });
+    console.log(`Message sent successfully to topic ${topic}`);
+  } catch (error) {
+    console.error(`Failed to send message to topic ${topic}:`, error);
+  }
+};
+
 module.exports = {
   connectConsumer,
   startConsumer,
+  connectProducer,
+  disconnectProducer,
+  sendMessage,
 };

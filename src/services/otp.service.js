@@ -1,7 +1,10 @@
-const { nodemailer, twilio } = require("../utils/imports.util");
+const { nodemailer, twilio, jwt } = require("../utils/imports.util");
 const { OTP } = require("../models/index");
 const { encrypt, decrypt } = require("../utils/crypto");
-const { ServiceError } = require("../utils/index.util").errorHandler;
+const { errorHandler, kafka } = require("../utils/index.util");
+const { JWT_SECRET } = require("../config/serverConfig");
+
+const { ServiceError } = errorHandler;
 
 class OTPService {
   constructor() {
@@ -34,14 +37,23 @@ class OTPService {
       const expirationTime = new Date(
         Date.now() + parseInt(process.env.OTP_EXPIRY_TIME)
       );
-      const newOTP = new OTP({ otp, expirationTime, type, recipient });
-      await newOTP.save();
+      const existingOTP = await OTP.findOne({ recipient });
+      let newOTP;
+      if (!existingOTP) {
+        newOTP = new OTP({ otp, expirationTime, type, recipient });
+        await newOTP.save();
+      } else {
+        existingOTP.otp = otp;
+        existingOTP.expirationTime = expirationTime;
+        await existingOTP.save();
+      }
       return {
         success: true,
-        data: { otp, otpId: newOTP._id },
+        data: { otp, otpId: existingOTP ? existingOTP._id : newOTP._id },
         error: null,
       };
     } catch (error) {
+      console.error("Failed to create OTP:", error);
       return {
         success: false,
         data: null,
@@ -62,6 +74,7 @@ class OTPService {
       await this.emailTransporter.sendMail(mailOptions);
       return { success: true, data: null, error: null };
     } catch (error) {
+      console.log(error, "Service Error");
       return {
         success: false,
         data: null,
@@ -87,9 +100,15 @@ class OTPService {
     }
   }
 
-  async verifyRecipient(otpId, recipient) {
+  async verifyRecipient(verificationKey) {
     try {
-      const otpRecord = await OTP.findById(otpId);
+      const user = this.verfiyJwtToken(verificationKey);
+
+      const otpRecord = await OTP.findOne({
+        recipient: user.email,
+        verified: false,
+      });
+
       if (!otpRecord) {
         return {
           success: false,
@@ -98,15 +117,7 @@ class OTPService {
         };
       }
 
-      if (otpRecord.recipient !== recipient) {
-        return {
-          success: false,
-          data: null,
-          error: new ServiceError("Recipient mismatch"),
-        };
-      }
-
-      return { success: true, data: otpRecord, error: null };
+      return { success: true, data: otpRecord, user: user, error: null };
     } catch (error) {
       return {
         success: false,
@@ -116,9 +127,10 @@ class OTPService {
     }
   }
 
-  async verifyOTP(otpId, userOTP) {
+  async verifyOTP(otpId, user, userOTP) {
     try {
-      const otpRecord = await OTP.findById(otpId);
+      const otpRecord = await OTP.findById(otpId, { verified: false });
+
       if (!otpRecord) {
         return {
           success: false,
@@ -153,6 +165,16 @@ class OTPService {
 
       otpRecord.verified = true;
       await otpRecord.save();
+
+      // Create a new profile for the user
+      kafka.sendMessage("user-events", {
+        type: "USER_CREATED",
+        data: {
+          userId: user.userId,
+          email: user.email,
+          username: user.username,
+        },
+      });
       return { success: true, data: true, error: null };
     } catch (error) {
       return {
@@ -170,7 +192,16 @@ class OTPService {
 
   decodeVerificationKey(verificationKey) {
     const decrypted = decrypt(verificationKey);
+    console.log("Decrypted:", decrypted);
     return JSON.parse(decrypted);
+  }
+
+  verfiyJwtToken(token) {
+    try {
+      return jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+      return null;
+    }
   }
 }
 
