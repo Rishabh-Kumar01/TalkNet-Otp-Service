@@ -49,7 +49,7 @@ class OTPController {
 
   async verifyOTP(req, res) {
     try {
-      const { otp, verificationKey } = req.body;
+      const { otp, verificationKey, isTwoFactorAuth } = req.body;
 
       const recipientVerification = await otpService.verifyRecipient(
         verificationKey
@@ -64,7 +64,8 @@ class OTPController {
       const { success, data, error } = await otpService.verifyOTP(
         recipientVerification.data._id,
         user,
-        otp
+        otp,
+        isTwoFactorAuth
       );
 
       if (!success) {

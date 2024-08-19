@@ -13,9 +13,11 @@ class OTPMiddleware {
   }
 
   static validateVerifyOTP(req, res, next) {
-    const { otp, verificationKey } = req.body;
-    if (!otp || !verificationKey) {
-      throw new ValidationError("OTP and verificationKey are required");
+    const { otp, verificationKey, isTwoFactorAuth } = req.body;
+    if (!otp || !verificationKey || !isTwoFactorAuth) {
+      throw new ValidationError(
+        "OTP, verificationKey and isTwoFactorAuth are required"
+      );
     }
     next();
   }

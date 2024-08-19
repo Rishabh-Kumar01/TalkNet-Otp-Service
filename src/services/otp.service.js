@@ -44,6 +44,7 @@ class OTPService {
         await newOTP.save();
       } else {
         existingOTP.otp = otp;
+        existingOTP.verified = false;
         existingOTP.expirationTime = expirationTime;
         await existingOTP.save();
       }
@@ -127,9 +128,9 @@ class OTPService {
     }
   }
 
-  async verifyOTP(otpId, user, userOTP) {
+  async verifyOTP(otpId, user, userOTP, isTwoFactorAuth) {
     try {
-      const otpRecord = await OTP.findById(otpId, { verified: false });
+      const otpRecord = await OTP.findById({ _id: otpId, verified: false });
 
       if (!otpRecord) {
         return {
@@ -167,14 +168,16 @@ class OTPService {
       await otpRecord.save();
 
       // Create a new profile for the user
-      kafka.sendMessage("user-events", {
-        type: "USER_CREATED",
-        data: {
-          userId: user.userId,
-          email: user.email,
-          username: user.username,
-        },
-      });
+      if (isTwoFactorAuth === "false") {
+        kafka.sendMessage("user-events", {
+          type: "USER_CREATED",
+          data: {
+            userId: user.userId,
+            email: user.email,
+            username: user.username,
+          },
+        });
+      }
       return { success: true, data: true, error: null };
     } catch (error) {
       return {
