@@ -2,7 +2,6 @@ const utils = require("./utils/index.util");
 const config = require("./config/index.config");
 const routes = require("./routes/index.route");
 const { AppError } = require("./utils/index.util").errorHandler;
-const OTPService = require("./services/otp.service");
 
 const app = utils.imports.express();
 

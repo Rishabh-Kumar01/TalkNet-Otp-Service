@@ -1,10 +1,9 @@
 const { nodemailer, twilio, jwt } = require("../utils/imports.util");
 const { OTP } = require("../models/index");
 const { encrypt, decrypt } = require("../utils/crypto");
-const { errorHandler, kafka } = require("../utils/index.util");
+const { kafka } = require("../utils/index.util");
 const { JWT_SECRET } = require("../config/serverConfig");
-
-const { ServiceError } = errorHandler;
+const { ServiceError } = require("../utils/errors/index.error");
 
 class OTPService {
   constructor() {

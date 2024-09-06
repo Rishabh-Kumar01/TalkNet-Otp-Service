@@ -1,4 +1,6 @@
 const { Kafka } = require("kafkajs");
+const OTPService = require("../services/otp.service");
+
 
 const kafka = new Kafka({
   clientId: "otp-service",
