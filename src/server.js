@@ -43,32 +43,7 @@ const setupAndStartServer = async () => {
 
   await utils.kafka.connectConsumer();
   await utils.kafka.connectProducer();
-  await utils.kafka.startConsumer(async (message) => {
-    if (message.type === "SEND_OTP") {
-      const { userId, email, action } = message.data;
-
-      // Create OTP
-      const { success, data, error } = await OTPService.createOTP(
-        "email",
-        email
-      );
-      if (!success) {
-        console.error("Failed to create OTP:", error);
-        return;
-      }
-
-      // Send OTP
-      const sendResult = await OTPService.sendOTPByEmail(email, data.otp);
-      if (!sendResult.success) {
-        console.error("Failed to send OTP:", sendResult.error);
-        return;
-      }
-
-      console.log(
-        `OTP sent successfully for user ${userId} with ${email} along with action ${action}`
-      );
-    }
-  });
+  await utils.kafka.startConsumer();
   console.log("Kafka consumer started");
 
   // Start the server and connect to the database
