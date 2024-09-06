@@ -200,7 +200,8 @@ class OTPService {
 
   verfiyJwtToken(token) {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET);
+      return decoded;
     } catch (error) {
       return null;
     }
